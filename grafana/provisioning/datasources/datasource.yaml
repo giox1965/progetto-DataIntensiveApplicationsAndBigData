@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: Flask API Infinity
+    uid: ds-flask-api
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    isDefault: true
+    jsonData:
+      global_queries: []
+
+  - name: Kafka Cluster
+    uid: ds-kafka-cluster
+    type: hamedkarbasi93-kafka-datasource
+    access: proxy
+    jsonData:
+      bootstrapServers: "broker1:9091,broker2:9091,broker3:9091,broker4:9091"

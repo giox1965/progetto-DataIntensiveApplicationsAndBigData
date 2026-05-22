@@ -1,0 +1,214 @@
+services:
+  controller:
+    image: apache/kafka:latest
+    container_name: controller
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://0.0.0.0:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093,2@broker1:9093,3@broker2:9093
+      KAFKA_CLUSTER_ID: "xtzWWN4bTjitpL3kfd9s5g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - controller_data:/var/lib/kafka/data
+
+  broker1:
+    image: apache/kafka:latest
+    container_name: broker1
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker1:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093,2@broker1:9093,3@broker2:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CLUSTER_ID: "xtzWWN4bTjitpL3kfd9s5g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    volumes:
+      - broker1_data:/var/lib/kafka/data
+
+  broker2:
+    image: apache/kafka:latest
+    container_name: broker2
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker2:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093,2@broker1:9093,3@broker2:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CLUSTER_ID: "xtzWWN4bTjitpL3kfd9s5g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    volumes:
+      - broker2_data:/var/lib/kafka/data
+
+  broker3:
+    image: apache/kafka:latest
+    container_name: broker3
+    environment:
+      KAFKA_NODE_ID: 4
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker3:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093,2@broker1:9093,3@broker2:9093
+      KAFKA_CLUSTER_ID: "xtzWWN4bTjitpL3kfd9s5g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    volumes:
+      - broker3_data:/var/lib/kafka/data
+
+  broker4:
+    image: apache/kafka:latest
+    container_name: broker4
+    environment:
+      KAFKA_NODE_ID: 5
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker4:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093,2@broker1:9093,3@broker2:9093
+      KAFKA_CLUSTER_ID: "xtzWWN4bTjitpL3kfd9s5g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    volumes:
+      - broker4_data:/var/lib/kafka/data
+
+  sensor-gateway:
+    build: ./producer
+    container_name: sensor-gateway
+    restart: on-failure          
+    depends_on:
+      - controller
+      - broker1
+      - broker2
+      - broker3
+      - broker4
+    ports:
+      - "8081:8081/udp"          
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "broker1:9091,broker2:9091,broker3:9091,broker4:9091"
+      SERVER_IP: 0.0.0.0
+      SERVER_PORT: 8081
+  
+  connect:
+    build: ./kafka_connect_mongo/
+    container_name: connect
+    depends_on:
+      - controller
+      - broker1
+      - broker2
+      - broker3
+      - broker4
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9091,broker2:9091,broker3:9091,broker4:9091'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    depends_on:
+      - connect
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes: 
+      - mongodb_data:/data/db
+  
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongodb:27017/?authSource=admin
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource,hamedkarbasi93-kafka-datasource
+      - GF_LIVE_ALLOWED_ORIGINS=*
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=500ms
+    depends_on:
+      - connect
+      - mongodb
+      - broker1
+      - broker2
+      - broker3
+      - broker4
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  flask:
+    build: ./flask-app
+    container_name: flask
+    ports:
+      - 5000:5000
+    depends_on:
+      - controller
+      - broker1
+      - broker2
+      - broker3
+      - broker4
+      - connect
+      - mongodb
+      - grafana
+
+volumes:
+  controller_data:
+  broker1_data:
+  broker2_data:
+  broker3_data:
+  broker4_data:
+  mongodb_data:

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard sensori</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header>
+    <h1>Dashboard monitoraggio sensori</h1>
+  </header>
+
+  <main>
+
+    <div class="panel full-width">
+      
+      <div class="panel-title">
+        Console query MongoDB personalizzata
+      </div>
+
+      <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 5px;">
+        <label for="selectImpianto" style="font-weight: bold; color: #444; font-size: 0.95rem;">
+          Seleziona impianto :
+        </label>
+        <select id="selectImpianto" style="padding: 8px 12px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 6px; background-color: #fff; max-width: 200px;">
+          <option value="impianto_1" selected>Impianto 1</option>
+          <option value="impianto_2">Impianto 2</option> 
+          <option value="impianto_3">Impianto 3</option>
+          <option value="impianto_4">Impianto 4</option>
+          <option value="impianto_5">Impianto 5</option>
+        </select>
+      </div>
+      
+      <div style="display: flex; gap: 30px; width: 100%; flex-wrap: wrap; align-items: flex-start;">
+        
+        <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
+          <label for="txtQuery" style="margin-bottom: 10px; font-weight: bold; color: #444; font-size: 0.95rem;">
+            Filtro JSON (MQL):
+          </label>
+          <textarea id="txtQuery" style="width: 100%; height: 300px; font-family: 'Courier New', Courier, monospace; font-size: 14px; padding: 15px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; box-sizing: border-box; background-color: #fafafa;"></textarea>
+          
+          <button class="btn-invia" id="btnInviaQuery" style="margin-top: 15px; padding: 12px 24px; background-color: #0056b3; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; align-self: flex-start; transition: background 0.3s;">
+            Esegui query
+          </button>
+          <div id="errorContainer" style="color: #d9534f; font-size: 0.9rem; margin-top: 10px; font-weight: bold;"></div>
+        </div>
+
+        <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
+          <label for="txtRisultato" style="margin-bottom: 10px; font-weight: bold; color: #444; font-size: 0.95rem;">
+            Risultato database:
+          </label>
+          <textarea id="txtRisultato" readonly style="width: 100%; height: 300px; font-family: 'Courier New', Courier, monospace; font-size: 14px; padding: 15px; border: 1px solid #dcdcdc; border-radius: 6px; background-color: #f0f0f5; color: #333; resize: vertical; box-sizing: border-box; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);" placeholder="I dati appariranno qui..."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Andamento storico medio (Database)</div>
+      <div class="panel-body double-height">
+        <iframe 
+          src="{{ grafana_url }}/d/grafico-temperature-medio/andamento-storico-medio-temperature?orgId=1&from=now-6h&viewPanel=1&to=now&timezone=browser&var-impianto=impianto_1&var-sensore=CURR&kiosk"
+          width="100%" 
+          height="100%" 
+          frameborder="0"></iframe>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Valori real-time (Kafka)</div>
+      <div class="panel-body double-height">
+        <iframe 
+          src="{{ grafana_url }}/d/adsblw5/table-timestaml-values?orgId=1&viewPanel=1&from=now-15m&to=now&refresh=500ms&kiosk"
+          width="100%" 
+          height="100%" 
+          frameborder="0"></iframe>
+      </div>
+    </div>
+
+    <div class="panel full-width">
+      <div class="panel-title">Telemetria real-time (Kafka)</div>
+      <div class="panel-body double-height">
+        <iframe 
+          src="{{ grafana_url }}/d/adjx970/andamento-trend-real-time-kafka?orgId=1&viewPanel=1&from=now-15m&to=now&refresh=500ms&kiosk" 
+          width="100%" 
+          height="100%" 
+          frameborder="0"></iframe>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+</html>
