@@ -58,7 +58,7 @@ Per eseguire questo progetto, assicurati di utilizzare il sistema operativo rich
 ### Software richiesti
 *   [Docker Engine](https://docs.docker.com/engine/install/)
 *   [Docker Compose](https://docs.docker.com/compose/install/)
-*   [Python 3.x](https://www.python.org/downloads/) (consigliata la versione 3.12 o superiore)
+*   [Python 3.12](https://www.python.org/downloads/) (o superiore)
 ---
 
 ## Come avviare il progetto
